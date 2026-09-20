@@ -1,6 +1,6 @@
 # HANDOFF – VietMindmap
 
-**Cập nhật:** 2026-09-18 · **Local:** `D:\Files\Claude\build_for_me\small_tool\viet_mindmap`
+**Cập nhật:** 2026-09-20 · **Local:** `D:/Files/Claude/Small projects/vietmindmap`
 
 ### 🔗 LINK CHÍNH
 
@@ -202,3 +202,21 @@ Verify kỹ hơn bình thường (đây là thay đổi CORE, đụng đúng ch�
 - Gấp nhánh làm sibling xích gần lại hơn thật (348.8px → 82.0px trong test case cụ thể) và không chồng lấn.
 
 `tsc --noEmit` / `eslint` (baseline y hệt, có sửa 1 warning unused-var phát sinh giữa chừng khi refactor rồi tự dọn) / `next build` đều sạch. **Vẫn chưa test tay qua browser thật** — verify trên chỉ dựa vào toạ độ số + AABB overlap check, KHÔNG phải xem bằng mắt trên web. Việc tiếp theo nên làm: mở web thật, tạo lại đúng cây 3 nhánh (0/6/1 con) như ảnh gốc, xác nhận bằng mắt là đẹp/cân đối như mong đợi.
+
+---
+
+## 8. Phiên 2026-09-20 — sibling spacing: khoảng cách ĐỀU + cân tâm mother
+
+User gửi ảnh cây "mother → 3 con, con1 có 3 cháu": con1 chiếm hơn nửa chiều cao, con2+con3 dồn cục vào chưa tới nửa còn lại. Yêu cầu chốt (ưu tiên cao hơn mọi tối ưu chỗ trống):
+
+> "child 1 — khoảng cách A — child 2 — khoảng cách A — child 3", con giữa LUÔN nằm tâm mother; con1 phình ra thì con3 cũng được đẩy ra xa tương ứng.
+
+**Nguyên nhân bản cũ (`ae83a77`, "lát theo size"):** mỗi con được cấp 1 "lát" cao = size subtree của nó rồi đặt ở tâm lát đó → con có nhiều cháu nhận lát rất cao, các con leaf nhận lát bé xíu nằm sát nhau ⇒ gap giữa các cặp sibling KHÁC NHAU. Đúng về mặt "không chồng lấn + cha nằm giữa mép trên/dưới cụm", nhưng nhìn thì lệch.
+
+**Bản mới (chi tiết đầy đủ + chứng minh không-chồng-lấn đã ghi ở `CLAUDE.md` §5, không lặp lại ở đây):** `computeMetrics` (đo `up`/`down` thật của subtree + chốt 1 khoảng `A` = max qua các cặp kề) → `positionChildren` (con thứ i tại `parent.y + (i − (n−1)/2) × A`). Bỏ hẳn `computeSubtreeSizes`/`subtreeSize`/`areaFor`.
+
+**Đánh đổi (user đã chốt, đừng tự ý tối ưu ngược):** map CAO hơn khi 1 nhánh to, vì mọi gap cùng cấp bị nới bằng cặp chật nhất.
+
+**Verify:** script sanity tạm (đã xóa, không commit) — đúng cây trong ảnh: con1/con2/con3 cách đều 186.24, con giữa lệch tâm mother = 0; cây 2 con (chẵn) vẫn cân 2 bên; kịch bản bug lịch sử (3 con, con giữa rỗng, 2 bên có cháu) gap vẫn đều; 50 cây ngẫu nhiên 30 node có gấp/mở → 0 overlap + gap đều + cụm cân tâm. `tsc --noEmit` sạch, `eslint` baseline y hệt (5 error + 7 warning có sẵn ở `MindMapCanvas.tsx`/`MindNodeBox.tsx`/`Sidebar.tsx`, không phát sinh thêm), `next build` sạch.
+
+**Lần này CÓ test mắt thật** (khác 2 phiên trước): cài Playwright vào scratchpad (không đụng repo), seed `localStorage` key `vietmindmap:v1:local-guest` đúng cây trong ảnh, chạy `next dev`, chụp màn hình → xác nhận con giữa trùng tâm mother, 2 con ngoài cách đều. Cách này tái dùng được cho lần sau khi cần verify UI.
