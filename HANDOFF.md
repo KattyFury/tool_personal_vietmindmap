@@ -1,6 +1,6 @@
 # HANDOFF – VietMindmap
 
-**Cập nhật:** 2026-09-20 · **Local:** `D:/Files/Claude/Small projects/vietmindmap`
+**Cập nhật:** 2026-09-20 · **Local:** `D:/Files/Claude/vietmindmap`
 
 ### 🔗 LINK CHÍNH
 
